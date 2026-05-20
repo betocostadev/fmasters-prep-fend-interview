@@ -1,13 +1,12 @@
 // bun test src/problems/05-throttle/test/throttle.test.ts
 
-export function throttle<F extends (...args: any[]) => void>(
-  fn: F,
-  delay: number,
-): (...args: Parameters<F>) => void {
+type AnyFn = (...args: any[]) => void
+
+export function throttle<F extends AnyFn>(fn: F, delay: number): (...args: Parameters<F>) => void {
   let lastCall: number = 0
   return function throttled(this: unknown, ...args) {
     const now = Date.now()
-    console.log('Now - last call: ', now - lastCall)
+    // console.log('Now - last call: ', now - lastCall)
     if (now - lastCall >= delay) {
       fn.apply(this, args)
       lastCall = now
