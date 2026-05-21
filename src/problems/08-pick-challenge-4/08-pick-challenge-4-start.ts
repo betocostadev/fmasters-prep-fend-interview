@@ -19,9 +19,7 @@ import type { Equal, Expect } from '@course/types'
 
 /* _____________ Your Code Here _____________ */
 
-type MyPick<T extends {}, K extends keyof T> = {
-  [P in K]: T[P]
-}
+type MyPick = {}
 
 /* _____________ Test Cases _____________ */
 

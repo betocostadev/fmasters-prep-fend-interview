@@ -19,13 +19,18 @@ export const myExtends = (SuperType: Function, SubType: Function) => {
 // --- Examples ---
 // Uncomment to test your implementation:
 
+// Animal Prototype
 function Animal(this: any, name: string) {
   this.name = name
 }
 Animal.prototype.greet = function () {
   return `Hello, ${this.name}`
 }
+Animal.prototype.sleep = function () {
+  return `${this.name} went to sleep`
+}
 
+// Dog Prototype
 function Dog(this: any) {
   this.breed = 'Labrador'
 }
@@ -39,4 +44,5 @@ console.log(dog.name) // Expected: "Meg"
 console.log(dog.breed) // Expected: "Labrador"
 console.log(dog.greet()) // Expected: "Hello, Meg"
 console.log(dog.bark()) // Expected: "Meg says Woof!"
+console.log(dog.sleep()) // Expected: "Meg says Woof!"
 console.log('Is dog instance of Animal?', dog instanceof Animal) // Expected: true
