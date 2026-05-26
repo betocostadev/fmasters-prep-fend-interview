@@ -10,7 +10,7 @@
  * }
  *
  * const todo: MyReadonly<Todo> = { title: "Hey" }
- * ! todo.title = "Hello" // Error: cannot reassign a readonly property
+ * todo.title = "Hello" // Error: cannot reassign a readonly property
  */
 
 import type { Equal, Expect } from '@course/types'
@@ -18,9 +18,6 @@ import type { Equal, Expect } from '@course/types'
 /* _____________ Your Code Here _____________ */
 
 // Your implementation here
-type MyReadonly<T extends {}> = {
-  readonly [Property in keyof T]: T[Property]
-}
 
 /* _____________ Test Cases _____________ */
 
