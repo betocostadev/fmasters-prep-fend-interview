@@ -53,11 +53,11 @@ implementations.forEach(({ name, fn }) => {
         })
 
         it('should stringify arrays with primitives', () => {
-          expect(stringify([1, 2, 3])).toBe('[1,2,3]')
+          expect(stringify([1, 2, 3])).toBe('[1, 2, 3]')
         })
 
         it('should stringify arrays with strings', () => {
-          expect(stringify(['a', 'b'])).toBe('["a","b"]')
+          expect(stringify(['a', 'b'])).toBe('["a", "b"]')
         })
 
         it('should stringify nested arrays', () => {
@@ -66,11 +66,11 @@ implementations.forEach(({ name, fn }) => {
               [1, 2],
               [3, 4],
             ]),
-          ).toBe('[[1,2],[3,4]]')
+          ).toBe('[[1, 2], [3, 4]]')
         })
 
         it('should stringify arrays with mixed types', () => {
-          expect(stringify([1, 'hello', true])).toBe('[1,"hello",true]')
+          expect(stringify([1, 'hello', true])).toBe('[1, "hello", true]')
         })
       })
 
@@ -97,7 +97,7 @@ implementations.forEach(({ name, fn }) => {
 
         it('should stringify objects with arrays', () => {
           const result = stringify({ arr: [1, 2, 3] })
-          expect(result).toBe('{ arr: [1,2,3] }')
+          expect(result).toBe('{ arr: [1, 2, 3] }')
         })
       })
 
@@ -129,7 +129,7 @@ implementations.forEach(({ name, fn }) => {
         })
 
         it('should stringify Set with values', () => {
-          expect(stringify(new Set([1, 2, 3]))).toBe('[1,2,3]')
+          expect(stringify(new Set([1, 2, 3]))).toBe('[1, 2, 3]')
         })
 
         it('should stringify Set with object values', () => {
