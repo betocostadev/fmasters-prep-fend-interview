@@ -8,22 +8,9 @@ const REJECTED: PromiseStatus = 'rejected'
 
 // Step 1: Define types and constants
 //  - Executor
-type TExecutor<T> = (
-  resolve: (value: T | PromiseLike<T>) => void,
-  reject: (reason: any) => any,
-) => void
 //  - OnFulfilled<T,R>
-type OnFulfilled<T, R> = null | undefined | ((value: T | PromiseLike<T>) => R)
 //  - OnRejected<R>
-type OnRejected<R> = null | undefined | ((reason: any) => R)
-
 //  - Handler
-type THandler = {
-  onFulfilled: (val: any) => any
-  onRejected: (reason: any) => any
-  resolve: (value: any) => void
-  reject: (reason: any) => void
-}
 //  - Update MyPromise<T> with types above
 // Step 2: Define class fields
 //  - handlers, status, value, isResolved
@@ -35,57 +22,15 @@ type THandler = {
 // - Run tests for then / catch and chaining
 // Step 7: static resolve, static reject
 // - Run tests for statics
-export class MyPromise<T> {
-  value: T | null = null
-  status: PromiseStatus = PENDING
-  handlers: THandler[] = []
-  isResolved: boolean = false
+export class MyPromise {
+  constructor(executor: any) {}
 
-  constructor(executor: TExecutor<T>) {
-    try {
-      executor(this.resolve, this.reject)
-    } catch (e) {
-      this.reject(e)
-    }
-  }
-
-  then<R = T>(onFulfilled: OnFulfilled<T, R>, onRejected?: OnRejected<R>) {
+  then() {
     throw new Error('Not implemented')
   }
-
-  #settle = (value: T | PromiseLike<T>, status = FULFILLED) => {
-    if (this.isResolved) {
-      return
-    }
-
-    this.isResolved = true
-    const update = (value: T) => {
-      this.value = value
-      this.status = status
-    }
-    if (value instanceof MyPromise) {
-      value.then(update)
-    } else {
-      update(value as T)
-    }
+  catch() {
+    throw new Error('Not implemented')
   }
-
-  execute = () => {
-    // Then it will execute handlers
-  }
-
-  resolve = (value: T | PromiseLike<T>): void => {
-    this.#settle(value)
-  }
-
-  reject = (reason: any): void => {
-    this.#settle(reason, REJECTED)
-  }
-
-  catch<R>(onRejected: OnRejected<R>) {
-    return this.then(null, onRejected)
-  }
-
   static resolve() {
     throw new Error('Not implemented')
   }
