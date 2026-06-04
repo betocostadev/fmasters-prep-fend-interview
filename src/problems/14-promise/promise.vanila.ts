@@ -17,7 +17,7 @@ type OnFulfilled<T, R> = null | undefined | ((value: T | PromiseLike<T>) => R)
 //  - OnRejected<R>
 type OnRejected<R> = null | undefined | ((reason: any) => R)
 
-//  - Handler
+//  - Handler - Using any to avoid handling the types within internal logic
 type THandler = {
   onFulfilled: (val: any) => any
   onRejected: (reason: any) => any
@@ -43,14 +43,39 @@ export class MyPromise<T> {
 
   constructor(executor: TExecutor<T>) {
     try {
-      executor(this.resolve, this.reject)
+      executor(this.#resolve, this.#reject)
     } catch (e) {
-      this.reject(e)
+      this.#reject(e)
     }
   }
 
+  // provide generic value R so TS infers it
   then<R = T>(onFulfilled: OnFulfilled<T, R>, onRejected?: OnRejected<R>) {
-    throw new Error('Not implemented')
+    const handler: THandler = {
+      onFulfilled: typeof onFulfilled === 'function' ? onFulfilled : (v) => v,
+      onRejected:
+        typeof onRejected === 'function'
+          ? onRejected
+          : (v) => {
+              throw v
+            },
+
+      resolve: () => {},
+      reject: () => {},
+    }
+
+    const promise = new MyPromise<R>((resolve, reject) => {
+      handler.resolve = resolve
+      handler.reject = reject
+    })
+
+    this.handlers.push(handler)
+
+    if (this.status !== PENDING) {
+      this.execute()
+    }
+
+    return promise
   }
 
   #settle = (value: T | PromiseLike<T>, status = FULFILLED) => {
@@ -62,7 +87,9 @@ export class MyPromise<T> {
     const update = (value: T) => {
       this.value = value
       this.status = status
+      this.execute()
     }
+
     if (value instanceof MyPromise) {
       value.then(update)
     } else {
@@ -71,14 +98,30 @@ export class MyPromise<T> {
   }
 
   execute = () => {
-    // Then it will execute handlers
+    // Iterates over all handlers and executes them in the micro-task queue
+    for (const { onFulfilled, onRejected, resolve, reject } of this.handlers) {
+      const handler = this.status === FULFILLED ? onFulfilled : onRejected
+      queueMicrotask(() => {
+        try {
+          const value = handler(this.value)
+          if (value instanceof MyPromise) {
+            value.then(resolve, reject)
+          } else {
+            resolve(value)
+          }
+        } catch (e) {
+          reject(e)
+        }
+      })
+    }
+    this.handlers = []
   }
 
-  resolve = (value: T | PromiseLike<T>): void => {
+  #resolve = (value: T | PromiseLike<T>): void => {
     this.#settle(value)
   }
 
-  reject = (reason: any): void => {
+  #reject = (reason: any): void => {
     this.#settle(reason, REJECTED)
   }
 
@@ -86,11 +129,11 @@ export class MyPromise<T> {
     return this.then(null, onRejected)
   }
 
-  static resolve() {
-    throw new Error('Not implemented')
+  static resolve<T>(value: T): MyPromise<T> {
+    return new MyPromise<T>((resolve) => resolve(value))
   }
-  static reject() {
-    throw new Error('Not implemented')
+  static reject<R>(reason: R): MyPromise<R> {
+    return new MyPromise<R>((_, reject) => reject(reason))
   }
 }
 
@@ -98,37 +141,57 @@ export class MyPromise<T> {
 // Uncomment to test your implementation:
 
 // --- Step 4: constructor + Executor ---
-// const p1 = new MyPromise((resolve: any) => resolve(42))
-// console.log(p1) // Expected: MyPromise { status: 'fulfilled', value: 42 }
+const p1 = new MyPromise((resolve: any) => resolve(42))
+console.log(p1) // Expected: MyPromise { status: 'fulfilled', value: 42 }
 //
-// const p2 = new MyPromise((_: any, reject: any) => reject('error'))
-// console.log(p2) // Expected: MyPromise { status: 'rejected', value: 'error' }
+const p2 = new MyPromise((_: any, reject: any) => reject('error'))
+console.log(p2) // Expected: MyPromise { status: 'rejected', value: 'error' }
 //
 // const p3 = new MyPromise(() => { throw new Error('oops') })
 // console.log(p3) // Expected: MyPromise { status: 'rejected', value: Error: oops }
 //
-// const p4 = new MyPromise((resolve: any) => { resolve(1); resolve(2) })
-// console.log(p4) // Expected: MyPromise { status: 'fulfilled', value: 1 } (settled once)
+const p4 = new MyPromise((resolve: any) => {
+  resolve(1)
+  resolve(2)
+})
+console.log(p4) // Expected: MyPromise { status: 'fulfilled', value: 1 } (settled once)
+
+// Resolved
+console.log(`
+==== Resolved promises and chaining ====
+`)
 
 // --- Step 6: then / catch and chaining ---
-// const p5 = new MyPromise((resolve: any) => resolve(42))
-// p5.then((v: any) => console.log(v))  // Expected: 42
+console.log('Step 6: resolves, then() is executed')
+console.log('Expected: 42')
+const p5 = new MyPromise((resolve: any) => resolve(42))
+p5.then((v: any) => console.log(v)) // Expected: 42
 //
-// const p6 = new MyPromise((resolve: any) => resolve(1))
-//   .then((v: any) => v + 1)
-//   .then((v: any) => console.log(v))   // Expected: 2
+
+const p6 = new MyPromise((resolve: any) => resolve(1)).then((v: any) => v + 1).then((v: any) => v) // Expected: 2
+// .then((v: any) => console.log('P1 sums with val + 1 = Expected 2:', v)) // Expected: 2
+console.log('P6 sums with val + 1 = Expected 2:', await p6)
 //
-// const p7 = new MyPromise((_: any, reject: any) => reject('error'))
-// p7.catch((e: any) => console.log(e))  // Expected: "error"
+const p7 = new MyPromise((_: any, reject: any) => reject('error'))
+p7.catch((e: any) => console.log(e)) // Expected: "error"
+
+// const p8 = new MyPromise((resolve: any) => resolve(2))
+//   .then((v: any) => v * 2)
+//   .then((v: any) => v * 4)
+//   .then((v: any) =>
+//     setTimeout(() => console.log('Last one due to setTimeout, expected 16: ', v), 0),
+//   )
 //
-// new MyPromise((_: any, reject: any) => reject('error'))
-//   .catch(() => 'recovered')
-//   .then((v: any) => console.log(v))   // Expected: "recovered"
+new MyPromise((_: any, reject: any) => reject('error'))
+  .catch(() => 'recovered')
+  .then((v: any) => console.log(v)) // Expected: "recovered"
 //
-// new MyPromise((resolve: any) => resolve(1))
-//   .then(() => { throw new Error('handler error') })
-//   .catch((e: any) => console.log(e.message))  // Expected: "handler error"
+new MyPromise((resolve: any) => resolve(1))
+  .then(() => {
+    throw new Error('handler error')
+  })
+  .catch((e: any) => console.log(e.message)) // Expected: "handler error"
 
 // --- Step 7: static resolve, static reject ---
-// MyPromise.resolve(99).then((v: any) => console.log(v))   // Expected: 99
-// MyPromise.reject('no').catch((e: any) => console.log(e))  // Expected: "no"
+MyPromise.resolve(99).then((v: any) => console.log(v)) // Expected: 99
+MyPromise.reject('no').catch((e: any) => console.log(e)) // Expected: "no"

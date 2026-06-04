@@ -55,13 +55,20 @@ export class MyPromise {
 // const p4 = new MyPromise((resolve: any) => { resolve(1); resolve(2) })
 // console.log(p4) // Expected: MyPromise { status: 'fulfilled', value: 1 } (settled once)
 
+// Resolved
+// console.log(`
+// ==== Resolved promises and chaining ====
+// `)
+
 // --- Step 6: then / catch and chaining ---
+// console.log('Step 6: resolves, then() is executed')
+// console.log('Expected: 42')
 // const p5 = new MyPromise((resolve: any) => resolve(42))
 // p5.then((v: any) => console.log(v))  // Expected: 42
 //
 // const p6 = new MyPromise((resolve: any) => resolve(1))
 //   .then((v: any) => v + 1)
-//   .then((v: any) => console.log(v))   // Expected: 2
+//   .then((v: any) => console.log('P1 sums with val + 1 = Expected 2:', v)) // Expected: 2
 //
 // const p7 = new MyPromise((_: any, reject: any) => reject('error'))
 // p7.catch((e: any) => console.log(e))  // Expected: "error"
