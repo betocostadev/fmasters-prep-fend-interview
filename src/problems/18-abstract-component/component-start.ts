@@ -19,10 +19,7 @@ const DEFAULT_CONFIG: Partial<TComponentConfig<any>> = {
   tag: 'div',
 }
 
-type TComponentListener = {
-  type: string
-  callback: EventListenerOrEventListenerObject
-}
+type TComponentListener = { type: string; callback: EventListenerOrEventListenerObject }
 
 /**
  * @param type
@@ -44,14 +41,7 @@ export abstract class AbstractComponent<T extends object> {
    * - Initializes events as an empty array
    */
   constructor(config: TComponentConfig<T>) {
-    // Component configuration - merged default and user config
-    this.config = {
-      ...DEFAULT_CONFIG,
-      ...config,
-    }
-
-    this.container = null
-    this.events = []
+    // TODO: implement
   }
 
   /**
@@ -66,25 +56,9 @@ export abstract class AbstractComponent<T extends object> {
    *   - Store { type, callback } in this.events array
    */
   init() {
-    this.container = document.createElement(this.config.tag!)
-    for (const className of this.config.className ?? []) {
-      this.container.classList.add(className)
-    }
-
-    for (const type of this.config.listeners ?? []) {
-      const classFunction = toEventName(type)
-      const callback = (this as unknown as Record<string, EventListener>)[classFunction].bind(this)
-      if (callback == null) {
-        throw new Error(`Event handler for '${type}' is not implemented`)
-      }
-
-      const handler = { type, callback }
-      this.events.push(handler)
-      this.container.addEventListener(type, callback)
-    }
+    // TODO: implement
   }
 
-  // Provided by the user creating the container
   afterRender() {}
 
   /**
@@ -96,12 +70,7 @@ export abstract class AbstractComponent<T extends object> {
    * - Call afterRender() hook
    */
   render() {
-    if (this.container) {
-      this.destroy()
-    }
-    this.init()
-    this.container!.innerHTML = this.toHTML()
-    this.config.root.appendChild(this.container!)
+    // TODO: implement
   }
 
   toHTML(): string {
@@ -115,10 +84,6 @@ export abstract class AbstractComponent<T extends object> {
    * - Remove the container from the DOM
    */
   destroy() {
-    for (const { type, callback } of this.events) {
-      this.container?.removeEventListener(type, callback)
-    }
-    this.container?.remove()
-    this.container = null
+    // TODO: implement
   }
 }
