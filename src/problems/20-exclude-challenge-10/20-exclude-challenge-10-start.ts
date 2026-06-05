@@ -13,7 +13,7 @@ import type { Equal, Expect } from '@course/types'
 
 /* _____________ Your Code Here _____________ */
 
-type MyExclude<T, U> = T extends U ? never : T
+type MyExclude<T, U> = {}
 
 /* _____________ Test Cases _____________ */
 
