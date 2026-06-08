@@ -57,8 +57,8 @@ export class Tabs extends AbstractComponent<TTabsProps> {
     const tabs = this.config.tabs.map(this.getTab).join('')
     const className = this.config.className
     const classes = cx(...(className ?? []))
-    const panel = this.config.target 
-      ? '' 
+    const panel = this.config.target
+      ? ''
       : `<section id="tab-panel" role="tabpanel" aria-labelledby="tab-${this.value}" class="${css.container}"></section>`
     return `<nav class="${classes}">
               <ul class="${cx(flex.flexRowGap8)}" role="tablist">
@@ -124,9 +124,8 @@ export class Tabs extends AbstractComponent<TTabsProps> {
    * - If tab name changed, activate the new tab
    */
   onClick({ target }: MouseEvent): void {
-    if(target instanceof HTMLElement && target.dataset.tab) {
+    if (target instanceof HTMLElement && target.dataset.tab) {
       this.activate(target.dataset.tab)
     }
   }
 }
-

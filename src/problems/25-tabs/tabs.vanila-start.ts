@@ -95,4 +95,3 @@ export class Tabs extends AbstractComponent<TTabsProps> {
     // TODO: implement
   }
 }
-

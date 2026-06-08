@@ -14,7 +14,7 @@ import type { Equal, Expect } from '@course/types'
 
 /* _____________ Your Code Here _____________ */
 
-// Making a tuple with `T` and `never` prevents distributive conditional types, which is necessary for this problem. 
+// Making a tuple with `T` and `never` prevents distributive conditional types, which is necessary for this problem.
 // Otherwise, the conditional type would distribute over unions, and we would get incorrect results for cases like `never | string`.
 type IsNever<T> = [T] extends [never] ? true : false
 
