@@ -30,14 +30,11 @@ export type TTabsProps = {
  * - Store the default tab name (from config.defaultTab or first tab's name)
  */
 export class Tabs extends AbstractComponent<TTabsProps> {
-  value: string
-
   constructor(config: TComponentConfig<TTabsProps>) {
     super({
       ...config,
       listeners: ['click'],
     })
-    this.value = config.defaultTab ?? this.config.tabs[0]?.name
   }
 
   /**
@@ -54,18 +51,8 @@ export class Tabs extends AbstractComponent<TTabsProps> {
    * - <section>: aria-labelledby="tab-{defaultTab}" — links panel to the active tab
    */
   toHTML(): string {
-    const tabs = this.config.tabs.map(this.getTab).join('')
-    const className = this.config.className
-    const classes = cx(...(className ?? []))
-    const panel = this.config.target 
-      ? '' 
-      : `<section id="tab-panel" role="tabpanel" aria-labelledby="tab-${this.value}" class="${css.container}"></section>`
-    return `<nav class="${classes}">
-              <ul class="${cx(flex.flexRowGap8)}" role="tablist">
-                ${tabs}
-              </ul>
-            ${panel}
-            `
+    // TODO: implement
+    return ``
   }
 
   /**
@@ -76,19 +63,8 @@ export class Tabs extends AbstractComponent<TTabsProps> {
    * - aria-selected="false" — indicates whether this tab is active
    * - data-tab="{name}" — used for click handling (not ARIA)
    */
-  getTab = ({ name }: TTabProps) => {
-    return `
-          <li>
-            <button aria-controls="tab-panel"
-              role="tab" 
-              aria-selected="{this.value === name}"
-              data-tab="${name}"
-              id="${name}"
-              >
-              ${name}
-            </button>
-          </li>
-        `
+  getTab({ name }: TTabProps) {
+    return ``
   }
 
   /**
@@ -97,7 +73,7 @@ export class Tabs extends AbstractComponent<TTabsProps> {
    * - Activate the default tab
    */
   afterRender(): void {
-    this.activate(this.value)
+    // TODO: implement
   }
 
   /**
@@ -106,15 +82,7 @@ export class Tabs extends AbstractComponent<TTabsProps> {
    * - Update the content panel's innerHTML and aria-labelledby="tab-{tabName}"
    */
   activate(tab: string) {
-    const element = this.config.target ?? document.getElementById('tab-panel')
-    if (!element) return
-
-    const content = this.config.tabs.find(({ name }) => name === tab)?.content
-    if (content) {
-      element.innerHTML = content
-      element.setAttribute('aria-labelledby', `tab-${tab}`)
-      this.value = tab
-    }
+    // TODO: implement
   }
 
   /**
@@ -124,9 +92,7 @@ export class Tabs extends AbstractComponent<TTabsProps> {
    * - If tab name changed, activate the new tab
    */
   onClick({ target }: MouseEvent): void {
-    if(target instanceof HTMLElement && target.dataset.tab) {
-      this.activate(target.dataset.tab)
-    }
+    // TODO: implement
   }
 }
 
