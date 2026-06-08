@@ -15,15 +15,7 @@ type Falsy = '' | 0 | false | undefined | null | []
 
 /* _____________ Your Code Here _____________ */
 
-type IsTruthy<T> = T extends Falsy 
-  ? false 
-  : keyof T extends never ? false : true
-
-type AnyOf<T extends readonly any[]> = T extends [infer First, ...infer Tail]
-  ? IsTruthy<First> extends true
-    ? true
-    : AnyOf<Tail>
-  : false
+type AnyOf = {}
 
 /* _____________ Test Cases _____________ */
 
