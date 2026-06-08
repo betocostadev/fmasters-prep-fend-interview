@@ -104,10 +104,7 @@ export class Tooltip extends AbstractComponent<TTooltipProps> {
      * a11y: role="tooltip" on the tooltip element
      */
     toHTML(): string {
-        return `
-            <div id="${this.id}" role="tooltip" style="display: none;">
-            </div>
-        `;
+        return ``;
     }
 
     /**
