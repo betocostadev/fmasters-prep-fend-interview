@@ -1,24 +1,26 @@
-import {AbstractComponent, type TComponentConfig} from '@course/utils'
+import { AbstractComponent, type TComponentConfig } from '@course/utils'
 import css from './tooltip.module.css'
 import cx from '@course/cx'
 
+// CSS Positioning
 type TPositionType = 'top' | 'bottom' | 'left' | 'right' | 'auto'
 
+// Where we can start rendering the tooltip
 type TCandidate = { position: 'top' | 'bottom' | 'left' | 'right'; x: number; y: number }
 
 type TTooltipProps = {
-    position?: TPositionType
-    children: HTMLElement
-    content: string
-    boundary?: HTMLElement
+  position?: TPositionType
+  children: HTMLElement
+  content: string
+  boundary?: HTMLElement // HTML body in this case, but could be an specific element
 }
 
 const positions: Record<TPositionType, string> = {
-    top: css.top,
-    bottom: css.bottom,
-    left: css.left,
-    right: css.right,
-    auto: ''
+  top: css.top,
+  bottom: css.bottom,
+  left: css.left,
+  right: css.right,
+  auto: '',
 } as const
 
 let id = 0
@@ -30,42 +32,50 @@ let id = 0
  * - Return first position that fits, or 'top' as fallback
  */
 function getAutoPosition(
-    tooltip: HTMLElement,
-    container: HTMLElement,
-    boundaryElement: HTMLElement,
+  tooltip: HTMLElement,
+  container: HTMLElement,
+  boundaryElement: HTMLElement,
 ): Exclude<TPositionType, 'auto'> {
-    /**
-     *                  ┌───TOP───┐
-     *                  └─────────┘
-     *     ┌──LEFT──┐   ┌─────────┐   ┌──RIGHT──┐
-     *     └────────┘   │CONTAINER│   └─────────┘
-     *                  └─────────┘
-     *                  ┌──BOTTOM─┐
-     *                  └─────────┘
-     */
-    const candidates: TCandidate[] = [
-        {position: 'top', x: 0, y: 0},
-        {position: 'right', x: 0, y: 0},
-        {position: 'bottom', x: 0, y: 0},
-        {position: 'left', x: 0, y: 0},
-    ];
+  // Map the bounding client rect
+  // tooltip, container, boundary
+  const [t, c, b] = [tooltip, container, boundaryElement].map((el) => el.getBoundingClientRect())
+  /**
+   *                  ┌───TOP───┐
+   *                  └─────────┘
+   *     ┌──LEFT──┐   ┌─────────┐   ┌──RIGHT──┐
+   *     └────────┘   │CONTAINER│   └─────────┘
+   *                  └─────────┘
+   *                  ┌──BOTTOM─┐
+   *                  └─────────┘
+   */
+  const candidates: TCandidate[] = [
+    { position: 'top', x: c.left, y: Math.ceil(c.top - t.height) },
+    { position: 'right', x: c.right, y: c.top },
+    { position: 'bottom', x: c.left, y: c.bottom },
+    { position: 'left', x: Math.ceil(c.left - t.width), y: c.top },
+  ]
 
-    /**
-     * boundaryRect.left          boundaryRect.right
-     *        ↓                          ↓
-     *        ┌──────────────────────────┐  ← boundaryRect.top
-     *        │                          │
-     *        │                          │
-     *        │      ┌──────────┐        │
-     *        │      │  TOOLTIP │        │
-     *        │      └──────────┘        │
-     *        │                          │
-     *        │                          │
-     *        └──────────────────────────┘  ← boundaryRect.bottom
-     */
-    const fit = ({x, y}: TCandidate) => {
-    }
-    return 'top';
+  /**
+   * boundaryRect.left          boundaryRect.right
+   *        ↓                          ↓
+   *        ┌──────────────────────────┐  ← boundaryRect.top
+   *        │                          │
+   *        │                          │
+   *        │      ┌──────────┐        │
+   *        │      │  TOOLTIP │        │
+   *        │      └──────────┘        │
+   *        │                          │
+   *        │                          │
+   *        └──────────────────────────┘  ← boundaryRect.bottom
+   */
+  // Verify if it is withing the boundaries
+  const fit = ({ x, y }: TCandidate) => {
+    const isFitHor = x >= b.left && x + t.width <= b.right
+    const isFitVer = y >= b.top && y + t.height <= b.bottom
+    return isFitHor && isFitVer
+  }
+  const candidate = candidates.find(fit)
+  return candidate?.position ?? 'top'
 }
 
 /**
@@ -84,72 +94,99 @@ function getAutoPosition(
  * - Store a unique id and a reference for the tooltip element
  */
 export class Tooltip extends AbstractComponent<TTooltipProps> {
+  id = `${id++}` // Tooltip id
+  tooltipElement: HTMLElement | null = null
 
-    id = `${id++}`;
-    tooltip: HTMLElement | null = null;
+  constructor(config: TComponentConfig<TTooltipProps>) {
+    super({
+      ...config,
+      className: [css.container],
+      listeners: ['mouseenter', 'mouseleave', 'focusin', 'focusout', 'keydown'],
+    })
+  }
 
-    constructor(config: TComponentConfig<TTooltipProps>) {
-        super({
-            ...config,
-            className: [css.container],
-            listeners: ['mouseenter', 'mouseleave', 'focusin', 'focusout', 'keydown'],
-        })
+  /**
+   * Step 2: Implement toHTML
+   * - Return a <div> with role="tooltip", unique id, display:none
+   * - Apply css.tooltip class and position class from positions map
+   * - Content comes from this.config.content
+   * a11y: role="tooltip" on the tooltip element
+   */
+  toHTML(): string {
+    return `
+        <div id="tooltip-${this.id}" role="tooltip" class="${css.tooltip}">
+            ${this.config.content}
+        </div>
+        `
+  }
+
+  /**
+   * Step 3: Implement afterRender
+   * - Append this.config.children (the trigger element) to this.container
+   * - Query and store the tooltip element by its id
+   * a11y: set aria-describedby on the trigger element pointing to the tooltip id
+   */
+  afterRender(): void {
+    this.container!.appendChild(this.config.children)
+    this.tooltipElement = this.container!.querySelector(`#tooltip-${this.id}`)
+  }
+
+  /**
+   * Step 4: Implement event handlers
+   * - onMouseenter / onFocusin: show the tooltip (call showTooltip)
+   * - onMouseleave / onFocusout: hide the tooltip (set display to 'none')
+   * - onKeydown: hide on Escape key
+   * a11y: focusin/focusout ensure keyboard users can trigger tooltip; Escape dismisses it
+   */
+  onMouseenter() {
+    this.showTooltip()
+  }
+
+  onMouseleave() {
+    this.hideTooltip()
+  }
+
+  onFocusin() {
+    this.showTooltip()
+  }
+
+  onFocusout() {
+    this.hideTooltip()
+  }
+
+  onKeydown(e: KeyboardEvent) {
+    if (e.code == 'Escape') {
+      this.hideTooltip()
     }
+  }
 
-    /**
-     * Step 2: Implement toHTML
-     * - Return a <div> with role="tooltip", unique id, display:none
-     * - Apply css.tooltip class and position class from positions map
-     * - Content comes from this.config.content
-     * a11y: role="tooltip" on the tooltip element
-     */
-    toHTML(): string {
-        return `
-            <div id="${this.id}" role="tooltip" style="display: none;">
-            </div>
-        `;
+  /**
+   * Step 5: Implement showTooltip
+   * - Set tooltip display to 'block'
+   * - If position is 'auto': compute best position using getAutoPosition,
+   *   remove all position classes, add the computed one
+   */
+  showTooltip() {
+    const tooltip = this.tooltipElement!
+    const position = this.config.position
+    tooltip.style.display = 'block'
+    const positionClass: TPositionType =
+      position === 'auto'
+        ? getAutoPosition(
+            this.tooltipElement!,
+            this.container!,
+            this.config.boundary ?? document.body,
+          )
+        : (position ?? 'top')
+    for (const className of Object.values(positions)) {
+      if (className) {
+        tooltip.classList.remove(className)
+      }
     }
+    tooltip.classList.add(positions[positionClass])
+  }
 
-    /**
-     * Step 3: Implement afterRender
-     * - Append this.config.children (the trigger element) to this.container
-     * - Query and store the tooltip element by its id
-     * a11y: set aria-describedby on the trigger element pointing to the tooltip id
-     */
-    afterRender(): void {
-    }
-
-    /**
-     * Step 4: Implement event handlers
-     * - onMouseenter / onFocusin: show the tooltip (call showTooltip)
-     * - onMouseleave / onFocusout: hide the tooltip (set display to 'none')
-     * - onKeydown: hide on Escape key
-     * a11y: focusin/focusout ensure keyboard users can trigger tooltip; Escape dismisses it
-     */
-    onMouseenter() {
-    }
-
-    onMouseleave() {
-    }
-
-    onFocusin() {
-    }
-
-    onFocusout() {
-    }
-
-    onKeydown(e: KeyboardEvent) {
-    }
-
-    /**
-     * Step 5: Implement showTooltip
-     * - Set tooltip display to 'block'
-     * - If position is 'auto': compute best position using getAutoPosition,
-     *   remove all position classes, add the computed one
-     */
-    showTooltip() {
-    }
-
-    hideTooltip() {
-    }
+  hideTooltip() {
+    this.tooltipElement!.style.display = 'none'
+  }
 }
