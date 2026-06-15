@@ -52,10 +52,45 @@ export type TRedditThreadProps = {
  */
 export class RedditThread extends AbstractComponent<TRedditThreadProps> {
   constructor(config: TComponentConfig<TRedditThreadProps>) {
-    super(config)
+    super({
+      ...config,
+      className: [styles.container, ...(config.className || [])],
+    })
+  }
+
+  private renderComment(comment: IRedditComment): string {
+    const hasReplies = comment.replies && comment.replies.length > 0
+
+    return `
+      <article class="${cx(styles.comment, flex.padding16)}">
+        <header class="${cx(flex.flexRowBetween)}">
+          <strong>${comment.nickname}</strong>
+          <time>${comment.date}</time>
+        </header>
+        <p class="${cx(flex.padding8)}">${comment.text}</p>
+        ${
+          hasReplies
+            ? `
+            <details>
+              <summary class="${styles.cursorPointer}">Replies</summary>
+              <ul class="${cx(styles.paddingLeft16, styles.repliesList)}">
+                ${comment.replies
+                  .map(
+                    (reply) => `
+                        <li>${this.renderComment(reply)}</li>
+                      `,
+                  )
+                  .join('')}
+                </ul>
+            </details>
+          `
+            : ''
+        }
+      </article>
+    `
   }
 
   toHTML(): string {
-    return '<div>TODO: Implement</div>'
+    return this.config.comments.map((comment) => this.renderComment(comment)).join('')
   }
 }

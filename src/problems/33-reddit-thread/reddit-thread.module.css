@@ -1,1 +1,23 @@
 /* Student solution styles */
+.container {
+  padding: 1rem;
+  border: 1px solid #ccc;
+  background-color: #e9e8e8;
+}
+.comment {
+  border: 1px solid #ccc;
+  background-color: white;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.repliesList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cursorPointer {
+  cursor: pointer;
+  user-select: none;
+}
