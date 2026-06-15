@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import styles from './table.module.css'
 import flex from '@course/styles'
 import cx from '@course/cx'
@@ -12,7 +12,7 @@ export interface TTableDataSource<T> {
 }
 
 export type TTableColumn<T> = {
-  id: string
+  id: keyof T & string
   name: string
   renderer: (item: T) => React.ReactNode
 }
@@ -31,6 +31,8 @@ type TSort<T> = {
   dir: TSortDir
 }
 
+const PAGE_SIZE = 5
+
 export function Table<T extends { id: string }>({
   search,
   columns,
@@ -42,27 +44,124 @@ export function Table<T extends { id: string }>({
   // - data (T[], default [])
   // - currentPage (number, default 0)
   // - sort ({ columnId, direction } | null, default null)
+  const [query, setQuery] = useState('')
+  const [data, setData] = useState<T[]>([])
+  const [sort, setSort] = useState<TSort<T> | null>(null)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
+
+  // workaround for development mode in React
+  const inFlightRef = useRef(false)
 
   // Step 2: Fetch initial data
   // - useEffect on datasource change: reset data and currentPage, fetch page 0
+  useEffect(() => {
+    if (data.length >= (currentPage + 1) * PAGE_SIZE) {
+      // Data is in cache
+      return
+    }
+
+    // This is just because in dev mode in react it runs twice
+    let cancelled = false
+
+    const loadPage = async () => {
+      // workaround for development mode in React
+      // To avoid dev mode double fetching
+      if (inFlightRef.current) return
+      inFlightRef.current = true
+
+      setIsLoading(true)
+
+      try {
+        const page = await datasource.next(currentPage, PAGE_SIZE)
+
+        if (!cancelled) {
+          setData((d) => [...d, ...page])
+        }
+      } catch (e) {
+        console.log(e)
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+        inFlightRef.current = false
+      }
+    }
+
+    // datasource
+    //   .next(currentPage, PAGE_SIZE)
+    //   .then(
+    //     (data: T[]) => {
+    //       // workaround for development mode in React
+    //       if (!cancelled) {
+    //         setData((d: T[]) => [...d, ...data])
+    //       }
+    //     },
+    //     (err: any) => {
+    //       throw err
+    //     },
+    //   )
+    //   .finally(() => setIsLoading(false))
+
+    void loadPage()
+
+    return () => {
+      cancelled = true
+      inFlightRef.current = false
+    }
+  }, [currentPage, datasource, data.length])
 
   // Step 3: Implement pagination handlers
   // - next: if not on last page, increment currentPage; if data not yet fetched, call datasource.next and append
   // - prev: decrement currentPage (min 0)
-  const next = () => {}
-  const prev = () => {}
+  const next = () => {
+    setCurrentPage((page) => page + 1)
+  }
+  const prev = () => {
+    setCurrentPage((page) => page - 1)
+  }
 
   // Step 4: Implement search handler
   const searchHandler = (data: T[], query: string): T[] => {
-    return []
+    if (!query) {
+      return data
+    }
+
+    if (search) {
+      return search(query, data)
+    } else {
+      return data.filter((d) => d.id.includes(query))
+    }
   }
+
+  const handleQuery = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value)
+  }, [])
 
   // Step 5: Implement sort handler
   // - onSort: read data-column-id from clicked th element
   // - Cycle direction: none → asc → desc → none
   // - Update sort state
   const onSort: React.MouseEventHandler<HTMLElement> = ({ target }) => {
-    // todo
+    if (target instanceof HTMLElement && target.dataset.id) {
+      const id = target.dataset.id as keyof T
+      setSort({
+        id,
+        dir: sort ? nextDir[sort.dir] : nextDir.none,
+      })
+    }
+  }
+
+  const getHeaderSortIcon = (id: keyof T) => {
+    if (sort?.id === id && sort.dir === 'asc') {
+      return '⬆️'
+    }
+
+    if (sort?.id === id && sort.dir === 'desc') {
+      return '⬇️'
+    }
+
+    return null
   }
 
   // Step 6: Compute displayed slice with useMemo
@@ -70,12 +169,59 @@ export function Table<T extends { id: string }>({
   // - Sort filtered data using comparator prop if sort is active
   // - Slice to current page window
 
-  const compute = (): T[] => {}
+  const compute = (): T[] => {
+    const filtered = searchHandler(data, query)
+    const sorted =
+      sort && sort.dir && sort.dir !== 'none' && comparator
+        ? filtered.toSorted(comparator(sort.id, sort.dir))
+        : filtered
+    return sorted.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
+  }
+
+  const chunk = compute()
 
   // Step 7: Render
   // - <table> with <thead> (column headers with sort indicators and data-column-id)
   // - <tbody> with rows from slice, using column renderers
   // - Controls: Prev/Next buttons (disabled at boundaries), page info, search input
 
-  return <div>TODO: Implement</div>
+  const content = chunk.map((v) => {
+    return (
+      <tr>
+        {columns.map((c) => {
+          return <td>{c.renderer(v)}</td>
+        })}
+      </tr>
+    )
+  })
+  return (
+    <div>
+      <table>
+        <thead>
+          <tr onClick={onSort}>
+            {columns.map((c) => (
+              <th data-id={c.id} className={cx(styles.clickHead, flex.padding8)}>
+                {c.name} <span>{getHeaderSortIcon(c.id)}</span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>{content}</tbody>
+      </table>
+      {isLoading && <p>Loading...</p>}
+      <div>
+        <button onClick={prev} className={cx(flex.paddingHor8)} disabled={currentPage === 0}>
+          Prev
+        </button>
+        <button
+          onClick={next}
+          className={cx(flex.paddingHor8)}
+          disabled={currentPage === datasource.pages - 1}
+        >
+          Next
+        </button>
+        <input type="text" onChange={handleQuery} value={query} placeholder="Search" />
+      </div>
+    </div>
+  )
 }

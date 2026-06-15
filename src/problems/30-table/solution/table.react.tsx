@@ -93,7 +93,7 @@ export function Table<T extends { id: string }>({
             {columns.map((c) => {
               const currentSort = sort?.columnId === c.id ? sort.direction : c.sort
               return (
-                <th data-column-id={c.id} className={cx(flex.padding8)} key={c.id}>
+                <th data-column-id={c.id} className={cx(styles.clickHead, flex.padding8)} key={c.id}>
                   {c.name}
                   {currentSort === 'asc' ? ' ↑' : currentSort === 'desc' ? ' ↓' : ''}
                 </th>
