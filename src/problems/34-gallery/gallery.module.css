@@ -8,8 +8,71 @@
   color: white;
   font-size: 2rem;
   z-index: 10;
+  position: absolute;
 }
-.gallery {}
-.image img {}
-.image {}
-.image__list {}
+
+.button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.button:not(:disabled):hover {
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  cursor: pointer;
+}
+
+.button:first-child {
+  left: 0;
+}
+
+.button, .nextbtn {
+  right: 0;
+}
+
+.gallery {
+  max-height: 500px;
+  overflow: hidden;
+}
+
+.image {
+  min-width: 100%;
+  min-height: 100%;
+  flex-shrink: 0;
+}
+
+.image img {
+  object-fit: cover;
+}
+
+.image__list {
+  display: flex;
+  flex-direction: row;
+  transition: transform 0.3s ease-in-out;
+}
+
+.indicators {
+  bottom: 16px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.dot:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.dotActive {
+  background: white;
+  transform: scale(1.2);
+}
+
+.empty {
+  color: #999;
+}
