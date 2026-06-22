@@ -58,7 +58,6 @@ export const Gallery = ({ images }: TGalleryProps) => {
   // - Dot indicators: one <button> per image, active dot gets css.dotActive class
   //   - onClick sets currentIndex to that dot's index, aria-label="Go to image {index + 1}"
 
-  // !Add the dots in the slides before commiting!
   const transformStyle = {
     transform: `translateX(-${currentIndex * 100}%)`,
   }
