@@ -16,6 +16,7 @@ import type { Equal, Expect } from '@course/types'
 /* _____________ Your Code Here _____________ */
 
 // Your implementation here
+type Last<T extends readonly any[]> = T extends readonly [...any[], infer L] ? L : never
 
 /* _____________ Test Cases _____________ */
 
