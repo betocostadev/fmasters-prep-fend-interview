@@ -16,8 +16,8 @@ type TToastItem = {
  *
  * Toast item: { id: '1', text: 'Vanilla Toast: 1' }
  */
+
 let toastInstanceID = 0
-const TIMEOUT = 3000
 export class Toast extends AbstractComponent<object> {
   id = toastInstanceID++
   listElement: HTMLUListElement | null = null
@@ -38,43 +38,8 @@ export class Toast extends AbstractComponent<object> {
     })
   }
   toHTML() {
-    return `<ul aria-live="polite" aria-relevant="additions removals" id="toast-instance-${this.id}"></ul>`
-  }
+    return `<ul aria-live="polite" aria-relevant="additions removals" id="toast-instance-${this.id}">
 
-  getToastItem = (item: TToastItem) => {
-    return `<li data-removed="false" id="${item.id}" role="status">
-          <div class="${cx(flex.flexColumnCenter, css.toast)}">
-              <p>${item.text}</p>
-          </div>
-        </li>
-    `
-  }
-
-  onAnimationend({ target }: any) {
-    if (target instanceof HTMLElement && target.dataset.removed === 'true') {
-      target.remove()
-    }
-  }
-
-  afterRender() {
-    // Acts like a React reference in this case
-    this.listElement = document.getElementById(`toast-instance-${this.id}`)! as HTMLUListElement
-  }
-
-  toast({ id, text }: TToastItem) {
-    const wrapper = document.createElement('div')
-    wrapper.innerHTML = this.getToastItem({ id, text })
-
-    const toastElement = wrapper.firstElementChild! as HTMLLIElement
-    this.listElement?.appendChild(toastElement)
-
-    toastElement.classList.add(css.fadeIn)
-    // Schedule the removal callback
-
-    setTimeout(() => {
-      toastElement.classList.remove(css.fadeIn)
-      toastElement.classList.add(css.fadeOut)
-      toastElement.dataset.removed = 'true'
-    }, TIMEOUT)
+      </ul>`
   }
 }
