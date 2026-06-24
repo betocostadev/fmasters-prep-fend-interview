@@ -11,8 +11,7 @@ import type { Equal, Expect } from '@course/types'
 
 /* _____________ Your Code Here _____________ */
 
-type Space = ' ' | '\t' | '\n'
-type TrimLeft<S extends string> = S extends `${Space}${infer Rest}` ? TrimLeft<Rest> : S
+// Your implementation here
 
 /* _____________ Test Cases _____________ */
 
