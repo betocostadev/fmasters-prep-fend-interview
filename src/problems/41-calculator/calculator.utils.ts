@@ -31,8 +31,7 @@ export const toFixedWithoutZeros = (num: number, precision: number) =>
  * @example applyNumber('3', '.')  // '3.'
  */
 export const applyNumber: TButtonAction = (_state: string, _number: string) => {
-  if (_state === '0') return _number
-  return `${_state}${_number}`
+  return _state === '0' ? _number : _state + _number
 }
 
 // console.log(applyNumber('0', '5')) // '5'
@@ -47,11 +46,8 @@ export const applyNumber: TButtonAction = (_state: string, _number: string) => {
  * @example applyOperation('5+', '*') // '5*' (replaces)
  */
 export const applyOperation: TButtonAction = (_state: string, _operator: string) => {
-  if (OPERATORS.has(_state.at(-1)!)) {
-    const result = _state.slice(0, -1)
-    return `${result}${_operator}`
-  }
-  return `${_state}${_operator}`
+  console.log(_state, _operator)
+  return OPERATORS.has(_state.at(-1) ?? '') ? _state.slice(0, -1) + _operator : _state + _operator
 }
 // console.log(applyOperation('5', '+')) // '5+'
 // console.log(applyOperation('5+', '*')) // '5*'
@@ -66,12 +62,19 @@ export const applyOperation: TButtonAction = (_state: string, _operator: string)
  * @example calculate('1/0', '=')   // 'Invalid value'
  */
 export const calculate: TButtonAction = (_state: string, _: string) => {
-  // In a real world app, would need to sanitize the input
-  const raw = new Function(`return ${_state}`)()
-  if (Number.isNaN(+raw) || !Number.isFinite(+raw)) {
+  if (!_state.match(/[0-9.()+/%*-]/)) {
     return INVALID_VALUE
   }
-  return raw
+  try {
+    const result = Number(new Function('return ' + _state)())
+    if (Number.isNaN(result) || !Number.isFinite(result)) {
+      return INVALID_VALUE
+    } else {
+      return toFixedWithoutZeros(result, 5)
+    }
+  } catch (_e) {
+    return INVALID_VALUE
+  }
 }
 
 /** Resets the calculator state back to '0'. */
