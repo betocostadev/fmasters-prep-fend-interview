@@ -1,1 +1,23 @@
 /* Student solution styles */
+.gameField {
+  display: grid;
+  grid-template-columns: repeat(3, 10rem);
+  grid-auto-rows: 10rem;
+  /* border: 4px solid black; */
+  /* max-width: 30rem; */
+}
+
+.grid__cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #000404;
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+}
+
+.grid__cell[data-empty="true"] {
+  background: rgba(0, 0, 0, 0.2);
+}

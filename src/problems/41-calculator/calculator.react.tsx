@@ -3,7 +3,8 @@ import { useState } from 'react'
 import css from './calculator.module.css'
 // import flex from '@course/styles'
 // import cx from '@course/cx'
-import { BUTTONS, INVALID_VALUE } from './calculator.utils'
+// import { BUTTONS, INVALID_VALUE } from './calculator.utils'
+import { BUTTONS } from './calculator.utils'
 
 // Buttons are static
 const buttons = BUTTONS.values().map((button) => {

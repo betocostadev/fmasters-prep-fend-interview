@@ -1,5 +1,5 @@
 import css from './gallery.module.css'
-import flex, { maxH1000px, maxW1000px } from '@course/styles'
+import flex, { maxW1000px } from '@course/styles'
 import cx from '@course/cx'
 import { useState, useEffect, useCallback } from 'react'
 
